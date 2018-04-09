@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>DAS TEST</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.0/moment.min.js"></script>
+  <style>
+    table {
+      border: 1px solid black;
+    }
+    table th,
+    table td {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <table>
+    <thead>
+      <tr>
+        <th>url</th>
+        <th>domena</th>
+        <th>stav</th>
+        <th>HTTP Status</th>
+        <th>req. start</th>
+        <th>req. end</th>
+        <th>req. duration (ms)</th>
+      </tr>
+    </thead>
+    <tbody id="results">
+
+    </tbody>
+  </table>
+  <script>
+    function addLineToTable(data) {
+      var $table = $('#results');
+      $table.append(
+        '<tr><td>'+data.url+
+        '</td><td>'+data.domain+
+        '</td><td>'+data.available+
+        '</td><td>'+data.status+
+        '</td><td>'+data.start+
+        '</td><td>'+data.finish+
+        '</td><td>'+data.duration+'</td></tr>'
+      );
+    }
+    var domains = [
+      'nic.cz', 'fasdasd.cz',
+      'test.com', 'dasdasdsa.com',
+      'test.design', 'dsjaldjlsa.co.uk',
+      'test.blablabla', 'invalid***.tld'
+    ];
+
+    var urls = [
+      {test: true, https: false, url: 'http://das-test.domena.cz/'},
+      {test: true, https: true, url: 'https://das-test.domena.cz/'},
+      {test: false, https: false, url: 'http://das.domena.cz/'},
+      {test: false, https: true, url: 'https://das.domena.cz/'}
+    ];
+    urls.forEach(url => {
+      domains.forEach(tld => {
+        const result = {
+          start: moment(),
+          domain: tld,
+          url: url.url
+        }
+        fetch(url.url + tld).then(response => {
+          result['status'] = response.status;
+          return response.json()
+        }).then(response => {
+          if (!response) {
+            result['available'] = 'no response';
+          } else if (!response.data) {
+            result['finish'] = moment();
+            result['duration'] = result['finish'] - result['start'];
+            result['available'] = response.available;
+          } else {
+            result['available'] = response.data.error;
+          }
+          addLineToTable(result);
+        }).catch(e => {
+          result['finish'] = moment();
+          result['duration'] = result['finish'] - result['start'];
+          result['available'] = 'error' + e;
+          addLineToTable(result);
+        })
+      });
+    });
+  </script>
+</body>
+
+</html>
